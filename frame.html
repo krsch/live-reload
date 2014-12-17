@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<style>
+html, body {
+    height: 100%;
+    margin: 0;
+}
+iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+</style>
+<iframe id="frame" src="/index.html" allowfullscreen></iframe>
+<script>
+(function(){
+ var frame = document.getElementById('frame');
+ var conn = new WebSocket("ws://localhost:8000/__ws");
+ function stripPrefix(str) {
+    var parser = document.createElement('a');
+    parser.href = str;
+
+    return parser.pathname.substring(1);
+ }
+ function checkCollection(collection, attr, value) {
+    if (!collection) return false;
+    for (var i=0; i<collection.length; i++) {
+        console.log(collection[i], stripPrefix(collection[i][attr]));
+        if (collection[i][attr] && decodeURI(stripPrefix(collection[i][attr])) == value) {
+            return true;
+        }
+    }
+    return false;
+ }
+ function checkDocument(doc, filename) {
+    var currentPath = doc.location.pathname.substring(1);
+    if (currentPath[currentPath.length-1] == '/') currentPath = currentPath + 'index.html';
+    if (currentPath == filename) {
+        console.log('reloading ' + filename);
+        doc.location.reload();
+        return;
+    }
+    if(checkCollection(doc.images, 'src', filename) ||
+        checkCollection(doc.scripts, 'src', filename) ||
+        checkCollection(doc.embed, 'src', filename) ||
+        checkCollection(doc.styleSheets, 'href', filename)){
+         doc.location.reload();
+         return;
+    }
+    var frames = doc.getElementsByTagName('iframe');
+    for (var i=0; i<frames.length; i++) checkDocument(frames[i].contentDocument, filename);
+ }
+ conn.onmessage = function(message) {
+    var filename = message.data;
+    console.log(filename);
+    var doc = frame.contentDocument;
+    checkDocument(doc,filename);
+ };
+})();
+</script>

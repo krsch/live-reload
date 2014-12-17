@@ -1,0 +1,31 @@
+Name:                live-reload
+Version:             0.1
+Synopsis:            Serves static content over HTTP with live reload
+Description:         Project Description Here
+License:             MIT
+Author:              Alexey Kreshchuk
+Maintainer:          akrsch@gmail.com
+Stability:           Experimental
+Category:            Web
+Build-type:          Simple
+Cabal-version:       >=1.2
+
+Executable live-reload
+  hs-source-dirs: src
+  main-is: Main.hs
+
+  Build-depends:
+    base                      >= 4     && < 5,
+    bytestring                >= 0.9.1 && < 0.11,
+    MonadCatchIO-transformers >= 0.2.1 && < 0.4,
+    mtl                       >= 2     && < 3,
+    snap-core                 >= 0.9   && < 0.10,
+    snap-server               >= 0.9   && < 0.10,
+    websockets-snap           >= 0.9   && < 0.10,
+    websockets                >= 0.9   && < 0.10,
+    fsnotify                  >= 0.1   && < 0.2,
+    text                      >= 0.10  && < 1.3,
+    system-filepath           >= 0.4   && < 0.5,
+    directory                 >= 1.2   && < 1.3
+
+  ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2

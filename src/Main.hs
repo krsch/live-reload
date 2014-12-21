@@ -12,27 +12,32 @@ import           Control.Concurrent.Chan
 import           Control.Concurrent(forkIO)
 import           Control.Monad(void,forever)
 import           Data.Text.Lazy(pack)
-import           Filesystem.Path.CurrentOS(encodeString)
+import           Filesystem.Path.CurrentOS(encodeString,decodeString)
 import           System.Directory
+import           System.Environment(getArgs)
+import           System.FilePath(makeRelative)
 
 main :: IO ()
 main = withManager $ \mgr -> do
+    args <- getArgs
+    cwd <- if null args then getCurrentDirectory else canonicalizePath $ head args
+    putStrLn $ "Serving directory " ++ cwd
     chan <- newChan
-    _ <- watchTreeChan mgr "." (const True) chan
+    _ <- watchTreeChan mgr (decodeString cwd) (const True) chan
     printChanges chan
     quickHttpServe $
         path "//__index.html" (serveFile "frame.html") <|>
-        path "__ws" (runWebSocketsSnap $ ws chan) <|>
-        serveDirectory "."
+        path "__ws" (runWebSocketsSnap $ ws cwd chan) <|>
+        serveDirectory cwd
 
-ws :: EventChannel -> ServerApp
-ws chan' pending = do
+ws :: String -> EventChannel -> ServerApp
+ws cwd chan' pending = do
     chan <- dupChan chan'
     conn <- acceptRequest pending
     sendTextData conn $ pack "index.html"
     forever $ do
         res <- readChan chan
-        res_path <- makeRelativeToCurrentDirectory $ encodeString $ eventPath res
+        let res_path = makeRelative cwd $ encodeString $ eventPath res
         sendTextData conn $ pack res_path
 
 printChanges :: EventChannel -> IO ()

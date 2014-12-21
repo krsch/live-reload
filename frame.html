@@ -17,11 +17,15 @@ iframe {
     bottom: 0;
 }
 </style>
-<iframe id="frame" src="/index.html" allowfullscreen></iframe>
+<iframe id="frame" allowfullscreen></iframe>
 <script>
 (function(){
  var frame = document.getElementById('frame');
  var conn = new WebSocket("ws://localhost:8000/__ws");
+ if (window.location.hash == "") {
+    window.location = '#/index.html';
+ }
+ frame.src = window.location.hash.substring(1);
  function stripPrefix(str) {
     var parser = document.createElement('a');
     parser.href = str;
@@ -61,6 +65,13 @@ iframe {
     console.log(filename);
     var doc = frame.contentDocument;
     checkDocument(doc,filename);
+ };
+ frame.onload = function onframeload(e) {
+     window.location = '#' + frame.contentDocument.location.pathname;
+ };
+ window.onhashchange = function onhashchange(e) {
+     var path = location.hash.substring(1);
+     if (path != frame.contentDocument.location.pathname) frame.src = path;
  };
 })();
 </script>
